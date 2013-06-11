@@ -1,0 +1,18 @@
+{
+	"name": "Boilerplate Component",
+	"version": "0.0.1",
+	"dependencies": {
+		"jquery": "lastest",
+		"underscore": "latest",
+		"backbone": "latest",
+		"requirejs": "latest",
+
+
+		"buildable": "simonfan/buildable",
+		"_.mixins": "simonfan/_.mixins",
+
+	    "qunit": "latest"
+	},
+
+	"main": "component.js"
+}
