@@ -31,13 +31,6 @@ function(   $   , Buildable , Backbone , undef      , undef     ) {
 			this.status = 'not-started';
 		},
 
-		rerun: function() {
-			var args = _.args(arguments);
-
-			this.reset();
-			this.run(args);
-		},
-
 		isComplete: function(taskname) {
 			if (taskname) {
 				return _.indexOf(this.done, taskname) !== -1;
@@ -80,6 +73,11 @@ function(   $   , Buildable , Backbone , undef      , undef     ) {
 			return _.find(this.tasks, function(task) {
 				return task.name === name;
 			});
+		},
+
+		rerun: function(params, ini, end) {
+			this.reset();
+			this.run(params, ini, end);
 		},
 
 		// runs a sequence of tasks
