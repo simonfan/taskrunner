@@ -32,8 +32,10 @@ function(   $   , Buildable , Backbone , undef      , undef     ) {
 		},
 
 		rerun: function() {
+			var args = _.args(arguments);
+
 			this.reset();
-			this.run();
+			this.run(args);
 		},
 
 		isComplete: function(taskname) {
@@ -81,11 +83,12 @@ function(   $   , Buildable , Backbone , undef      , undef     ) {
 		},
 
 		// runs a sequence of tasks
-		run: function(args, ini, end) {
+		run: function(parameters, ini, end) {
 
 			if (this.isComplete()) { return true; }
 
-			var iniIndex = ini ?  _.indexOf(this.taskorder, ini) : 0,
+			var parameters = parameters || [],
+				iniIndex = ini ?  _.indexOf(this.taskorder, ini) : 0,
 				endIndex = end ? _.indexOf(this.taskorder, end) : this.taskorder.length -1;
 
 			if (iniIndex !== -1 && endIndex !== -1) {
@@ -122,7 +125,8 @@ function(   $   , Buildable , Backbone , undef      , undef     ) {
 					} else {
 						// else, if there are no deferrals on list,
 						// task the task immediately
-						task.task.call(task.context, currentDefer);
+						parameters.unshift(currentDefer)
+						task.task.apply(task.context, parameters);
 					}
 
 					// set the lastDefer value as the current task defer
