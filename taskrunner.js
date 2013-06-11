@@ -21,6 +21,27 @@ function(   $   , Buildable , Backbone , undef      , undef     ) {
 			this.taskorder = _.map(tasks, function(task) {
 				return task.name;
 			});
+
+			this.done = [];
+			this.complete = false;
+		},
+
+		reset: function() {
+			this.done = [];
+			this.complete = false;
+		},
+
+		rerun: function() {
+			this.reset();
+			this.run();
+		},
+
+		isComplete: function(taskname) {
+			if (taskname) {
+				return _.indexOf(this.done, taskname) !== -1;
+			} else {
+				return this.complete;
+			}
 		},
 
 		add: function(task, at) {
@@ -110,9 +131,11 @@ function(   $   , Buildable , Backbone , undef      , undef     ) {
 
 		_complete: function(task) {
 			this.trigger('complete', task.name);
+			this.done.push(task.name);
 
 			if ( task.name === _.last(this.taskorder) ) {
 				this.trigger('sequence-complete', task.name);
+				this.complete = true;
 			}
 		},
 	})
