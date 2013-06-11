@@ -83,6 +83,8 @@ function(   $   , Buildable , Backbone , undef      , undef     ) {
 		// runs a sequence of tasks
 		run: function(args, ini, end) {
 
+			if (this.isComplete()) { return true; }
+
 			var iniIndex = ini ?  _.indexOf(this.taskorder, ini) : 0,
 				endIndex = end ? _.indexOf(this.taskorder, end) : this.taskorder.length -1;
 
@@ -126,6 +128,10 @@ function(   $   , Buildable , Backbone , undef      , undef     ) {
 					// set the lastDefer value as the current task defer
 					lastDefer = currentDefer;
 				});
+
+				// return the defer of the last task, so that
+				// this respects the promise and stuff like that.
+				return lastDefer;
 			}
 		},
 
@@ -136,7 +142,7 @@ function(   $   , Buildable , Backbone , undef      , undef     ) {
 			this.status = 'incomplete';
 
 			if ( task.name === _.last(this.taskorder) ) {
-				this.trigger('sequence-complete', task.name);
+				this.trigger('sequence-complete');
 				this.status = 'complete';
 			}
 		},
