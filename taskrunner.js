@@ -23,12 +23,12 @@ function(   $   , Buildable , Backbone , undef      , undef     ) {
 			});
 
 			this.done = [];
-			this.complete = false;
+			this.status = 'not-started';
 		},
 
 		reset: function() {
 			this.done = [];
-			this.complete = false;
+			this.status = 'not-started';
 		},
 
 		rerun: function() {
@@ -40,7 +40,7 @@ function(   $   , Buildable , Backbone , undef      , undef     ) {
 			if (taskname) {
 				return _.indexOf(this.done, taskname) !== -1;
 			} else {
-				return this.complete;
+				return this.status === 'complete';
 			}
 		},
 
@@ -133,9 +133,11 @@ function(   $   , Buildable , Backbone , undef      , undef     ) {
 			this.trigger('complete', task.name);
 			this.done.push(task.name);
 
+			this.status = 'incomplete';
+
 			if ( task.name === _.last(this.taskorder) ) {
 				this.trigger('sequence-complete', task.name);
-				this.complete = true;
+				this.status = 'complete';
 			}
 		},
 	})
