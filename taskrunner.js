@@ -3,7 +3,7 @@ function(   $   , Buildable , Backbone , undef      , undef     ) {
 
 	var TaskRunner = Object.create(Buildable);
 	TaskRunner.extend(Backbone.Events, {
-		init: function(tasks) {
+		init: function(taskorder, tasks) {
 			/*
 				tasks: [
 					{
@@ -17,62 +17,66 @@ function(   $   , Buildable , Backbone , undef      , undef     ) {
 
 			_.bindAll(this);
 
-			this.tasks = tasks || [];
-			this.taskorder = _.map(tasks, function(task) {
-				return task.name;
-			});
+			this.taskorder = taskorder || [];	// a list of tasks by name
+			this.tasks = tasks || {};			// a hash where reference to tasks is saved
 
-			this.done = [];
-			this.status = 'not-started';
+			this.done = {};
+			this.status = 'unstarted';
 		},
 
 		reset: function() {
-			this.done = [];
-			this.status = 'not-started';
+			this.done = {};
+			this.status = 'unstarted';
 		},
 
 		isComplete: function(taskname) {
 			if (taskname) {
-				return _.indexOf(this.done, taskname) !== -1;
+				return this.done[ taskname ];
 			} else {
 				return this.status === 'complete';
 			}
 		},
 
-		add: function(task, at) {
+		add: function(name, task) {
 
-			if ( _.isArray(task) ) {
-				var _this = this;
-				// recursive
-				_.each(task, function(task, index) {
-					_this.add(task);
-				});
-				
+			// first deal with the name
+			if ( _.isArray(name) ) {
+				// merge the arrays
+				this.taskorder = this.taskorder.concat(name);
+
 			} else {
+				this.taskorder.push(name);
+			}
 
-				at = at || this.tasks.length;
-				this.tasks.splice(at, 0, task);
-				this.taskorder.splice(at, 0, task.name);
+			// then deal with the task
+			if ( typeof task === 'function' ) {
+				// use the name as hash
+				this.tasks[ name ] = task;
+			} else if ( task === 'object' ) {
 
+				// merge the objects
+				this.tasks = _.extend(this.tasks, task);
 			}
 
 			return this;
 		},
 		
 		remove: function(name) {
-			var pos = _.indexOf(this.taskorder, name);
-			if (pos !== -1) {
-				this.tasks.splice( pos - 1, 1);
-				this.taskorder.splice( pos - 1, 1);
+
+			if ( _.isArray(name) ) {
+				// recursive
+				_.each(name, this.remove);
+			} else {
+
+				this.taskorder = _.without(this.taskorder, name);
+				delete this.tasks[ name ];
 			}
 
 			return this;
 		},
 
-		find: function(name) {
-			return _.find(this.tasks, function(task) {
-				return task.name === name;
-			});
+		get: function(name) {
+			return this.tasks[ name ];
 		},
 
 		rerun: function(params, ini, end) {
@@ -81,63 +85,67 @@ function(   $   , Buildable , Backbone , undef      , undef     ) {
 		},
 
 		// runs a sequence of tasks
-		run: function(parameters, ini, end) {
+		run: function(parameters, ini_end, options) {
+			// params: parameters to be passed to the task
+			// ini_end: array with name of starting task as 0 and ending task as 1
+			// options: additional options
+			//			- silent: true if no events are requested
 
 			if (this.isComplete()) { return true; }
 
 			var parameters = parameters || [],
-				iniIndex = ini ?  _.indexOf(this.taskorder, ini) : 0,
-				endIndex = end ? _.indexOf(this.taskorder, end) : this.taskorder.length -1;
+				options = options || {},
+				iniIndex = ini_end[0] ?  _.indexOf(this.taskorder, ini_end[0]) : 0,
+				endIndex = ini_end[1] ? _.indexOf(this.taskorder, ini_end[1]) : this.taskorder.length -1;
 
 			if (iniIndex !== -1 && endIndex !== -1) {
 
 				var _this = this,
-					tasksToRun = _.clone(this.tasks).slice(iniIndex, endIndex + 1),
-					lastDefer = false;
+					tasksToRun = _.clone(this.taskorder).slice(iniIndex, endIndex + 1),
+					lastPromise = false;
 
-				_.each(tasksToRun, function(task, index) {
+				_.each(tasksToRun, function(taskname, index) {
 
-					// create the defer object for the current task
-					var currentDefer = $.Deferred();
+					var task = _this.tasks[ taskname ],		// get the task
+						currentPromise = $.Deferred();		// create the defer object for the current task
 
-					// trigger events
-					$.when(currentDefer).then(function() {
-						_this._complete(task);
+					// trigger events when this task is done
+					$.when(currentPromise).then(function() {
+						_this._complete(task, options);
 					});
 
-					if (lastDefer) {
-						// if there are defer objects, only run the task after the last defer
-						// is solved
-						$.when(lastDefer)
+					if (lastPromise) {
+						// if there are promises, wait until it is resolved to run
+						$.when(lastPromise)
 						.then(
 							function() {
 								// pass the arguments to the next task
 								var args = _.args(arguments);
 
-								// add the deferral to the arguments to be passed to the next task
-								args.unshift(currentDefer);
+								// add the promise to the arguments to be passed to the next task
+								args.unshift(currentPromise);
 
-								task.task.apply(task.context, args);
+								task.apply(null, args);
 							}
 						);
 					} else {
 						// else, if there are no deferrals on list,
 						// task the task immediately
-						parameters.unshift(currentDefer)
-						task.task.apply(task.context, parameters);
+						parameters.unshift(currentPromise)
+						task.apply(null, parameters);
 					}
 
-					// set the lastDefer value as the current task defer
-					lastDefer = currentDefer;
+					// set the lastPromise value as the current task defer
+					lastPromise = currentPromise;
 				});
 
 				// return the defer of the last task, so that
 				// this respects the promise and stuff like that.
-				return lastDefer;
+				return lastPromise;
 			}
 		},
 
-		_complete: function(task) {
+		_complete: function(task, options) {
 			this.trigger('complete', task.name);
 			this.done.push(task.name);
 
