@@ -140,13 +140,19 @@ function(   $   , Buildable , Backbone , undef      , undef     ) {
 		},
 
 		_complete: function(taskname, options) {
-			this.trigger('complete', taskname);
+
+			if (!options.silent) {
+				this.trigger('complete', taskname);
+			}
+			
 			this.done[ taskname ] = true;
 
 			this.status = 'incomplete';
 
 			if ( taskname === _.last(this.taskorder) ) {
-				this.trigger('sequence-complete');
+				if (!options.silent) {
+					this.trigger('sequence-complete');
+				}
 				this.status = 'complete';
 			}
 		},
