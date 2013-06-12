@@ -4,16 +4,9 @@ function(   $   , Buildable , Backbone , undef      , undef     ) {
 	var TaskRunner = Object.create(Buildable);
 	TaskRunner.extend(Backbone.Events, {
 		init: function(taskorder, tasks) {
-			/*
-				tasks: [
-					{
-						name: 'task name',
-						task: function (defer),
-						context: 
-					},
-					...
-				]
-			*/
+			// tasks are functions that take a promise as their first parameter 
+			// and somewhere in time solves the promise, so that another task may be run.
+			// All solved parameters are passed on to the next function in the task list.
 
 			_.bindAll(this);
 
@@ -85,18 +78,19 @@ function(   $   , Buildable , Backbone , undef      , undef     ) {
 		},
 
 		// runs a sequence of tasks
-		run: function(parameters, ini_end, options) {
+		run: function(parameters, options) {
 			// params: parameters to be passed to the task
-			// ini_end: array with name of starting task as 0 and ending task as 1
 			// options: additional options
 			//			- silent: true if no events are requested
+			//			- ini
+			//			- end
 
 			if (this.isComplete()) { return true; }
 
 			var parameters = parameters || [],
 				options = options || {},
-				iniIndex = ini_end[0] ?  _.indexOf(this.taskorder, ini_end[0]) : 0,
-				endIndex = ini_end[1] ? _.indexOf(this.taskorder, ini_end[1]) : this.taskorder.length -1;
+				iniIndex = options.ini ?  _.indexOf(this.taskorder, ini_end[0]) : 0,
+				endIndex = options.end ? _.indexOf(this.taskorder, ini_end[1]) : this.taskorder.length -1;
 
 			if (iniIndex !== -1 && endIndex !== -1) {
 
@@ -111,7 +105,7 @@ function(   $   , Buildable , Backbone , undef      , undef     ) {
 
 					// trigger events when this task is done
 					$.when(currentPromise).then(function() {
-						_this._complete(task, options);
+						_this._complete(taskname, options);
 					});
 
 					if (lastPromise) {
@@ -145,13 +139,13 @@ function(   $   , Buildable , Backbone , undef      , undef     ) {
 			}
 		},
 
-		_complete: function(task, options) {
-			this.trigger('complete', task.name);
-			this.done.push(task.name);
+		_complete: function(taskname, options) {
+			this.trigger('complete', taskname);
+			this.done[ taskname ] = true;
 
 			this.status = 'incomplete';
 
-			if ( task.name === _.last(this.taskorder) ) {
+			if ( taskname === _.last(this.taskorder) ) {
 				this.trigger('sequence-complete');
 				this.status = 'complete';
 			}
