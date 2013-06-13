@@ -31,6 +31,10 @@ define(['taskrunner'], function(TaskRunner) {
 		console.log('sequence started event at ' + new Date().getTime() / 1000);
 	});
 
+	taskrunner.on('start', function(taskname) {
+		console.log('start event:' + taskname + ' ' + new Date().getTime() / 1000);
+	});
+
 	taskrunner.on('complete', function(taskname) {
 		console.log('complete event:' + taskname + ' ' + new Date().getTime() / 1000);
 	});
@@ -38,6 +42,13 @@ define(['taskrunner'], function(TaskRunner) {
 	taskrunner.on('complete:test-second', function() {
 		console.log('complete:test-second event')
 	});
+
+
+
+
+	taskrunner.on('start:test-third', function() {
+		console.log('start:test-third event');
+	})
 
 	taskrunner.on('sequence-complete', function() {
 		console.log('sequence finished event at ' + new Date().getTime() / 1000);

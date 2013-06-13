@@ -14,6 +14,7 @@ function(   $   , Buildable , Backbone , undef      , undef     ) {
 			this.tasks = tasks || {};			// a hash where reference to tasks is saved
 
 			this.done = {};
+			this.started = {};
 			this.status = 'unstarted';
 		},
 
@@ -98,13 +99,11 @@ function(   $   , Buildable , Backbone , undef      , undef     ) {
 					tasksToRun = _.clone(this.taskorder).slice(iniIndex, endIndex + 1),
 					lastPromise = false;
 
-				// trigger the sequence-started event
-				this.trigger('sequence-start');
-
 				_.each(tasksToRun, function(taskname, index) {
 
 					var task = _this.tasks[ taskname ],		// get the task
 						currentPromise = $.Deferred();		// create the defer object for the current task
+
 
 
 					// trigger events when this task is done
@@ -117,6 +116,9 @@ function(   $   , Buildable , Backbone , undef      , undef     ) {
 						$.when(lastPromise)
 						.then(
 							function() {
+								// trigger the events properly for the last task
+								_this._start(tasksToRun[ index + 1 ], options);
+
 								// effectively run the task.
 								// pass the promise to be solved by the task as first argument
 								// and the common obj as second argument
@@ -124,6 +126,9 @@ function(   $   , Buildable , Backbone , undef      , undef     ) {
 							}
 						);
 					} else {
+						// trigger the events properly for the last task
+						_this._start(taskname, options);
+
 						// else, if there are no deferrals on list,
 						// task the task immediately
 						// pass the promise to be solved by the task as first argument
@@ -141,6 +146,24 @@ function(   $   , Buildable , Backbone , undef      , undef     ) {
 			}
 		},
 
+		// method to deal with the start of each one of the tasks
+		_start: function(taskname, options) {
+			if (!options.silent) {
+				this.trigger('start', taskname);
+				this.trigger('start:' + taskname);
+			}
+			this.started[ taskname ] = true;
+
+			// sequence started event
+			if ( taskname === this.taskorder[0] ) {
+				if (!options.silent) {
+					this.trigger('sequence-start');
+				}
+				// the sequence is incomplete
+				this.status = 'incomplete';
+			}
+		},
+
 		// method that deals with the completion of each one of the tasks.
 		_complete: function(taskname, options) {
 
@@ -150,9 +173,6 @@ function(   $   , Buildable , Backbone , undef      , undef     ) {
 				this.trigger('complete:' + taskname);
 			}
 			this.done[ taskname ] = true;
-
-			// the sequence is incomplete
-			this.status = 'incomplete';
 
 			// sequence complete event
 			if ( taskname === _.last(this.taskorder) ) {
