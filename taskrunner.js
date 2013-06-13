@@ -78,8 +78,8 @@ function(   $   , Buildable , Backbone , undef      , undef     ) {
 		},
 
 		// runs a sequence of tasks
-		run: function(args, options) {
-			// params: args to be passed to the task
+		run: function(common, options) {
+			// common: object common to all tasks, passed as second parameter
 			// options: additional options
 			//			- silent: true if no events are requested
 			//			- ini
@@ -87,7 +87,7 @@ function(   $   , Buildable , Backbone , undef      , undef     ) {
 
 			if (this.isComplete()) { return true; }
 
-			var args = args || [],
+			var common = common || {},
 				options = options || {},
 				iniIndex = options.ini ?  _.indexOf(this.taskorder, ini_end[0]) : 0,
 				endIndex = options.end ? _.indexOf(this.taskorder, ini_end[1]) : this.taskorder.length -1;
@@ -95,14 +95,17 @@ function(   $   , Buildable , Backbone , undef      , undef     ) {
 			if (iniIndex !== -1 && endIndex !== -1) {
 
 				var _this = this,
-					common = {},		// a common object, passed as second argument to all tasks
 					tasksToRun = _.clone(this.taskorder).slice(iniIndex, endIndex + 1),
 					lastPromise = false;
+
+				// trigger the sequence-started event
+				this.trigger('sequence-start');
 
 				_.each(tasksToRun, function(taskname, index) {
 
 					var task = _this.tasks[ taskname ],		// get the task
 						currentPromise = $.Deferred();		// create the defer object for the current task
+
 
 					// trigger events when this task is done
 					$.when(currentPromise).then(function() {
@@ -114,46 +117,44 @@ function(   $   , Buildable , Backbone , undef      , undef     ) {
 						$.when(lastPromise)
 						.then(
 							function() {
-								// pass the arguments to the next task
-								var args = _.args(arguments);
-
-								// add the common object to the arguments
-								args.unshift(common);
-								// add the promise to the arguments to be passed to the next task
-								args.unshift(currentPromise);
-
-								// effectively run the task
-								task.apply(null, args);
+								// effectively run the task.
+								// pass the promise to be solved by the task as first argument
+								// and the common obj as second argument
+								task(currentPromise, common);
 							}
 						);
 					} else {
 						// else, if there are no deferrals on list,
 						// task the task immediately
-						args.unshift(common)
-						args.unshift(currentPromise)
-						task.apply(null, args);
+						// pass the promise to be solved by the task as first argument
+						// and the common obj as second argument
+						task(currentPromise, common);
 					}
 
-					// set the lastPromise value as the current task defer
+					// set the lastPromise value to the current task promise
 					lastPromise = currentPromise;
 				});
 
 				// return the defer of the last task, so that
-				// this respects the promise and stuff like that.
+				// this respects the promise spec
 				return lastPromise;
 			}
 		},
 
+		// method that deals with the completion of each one of the tasks.
 		_complete: function(taskname, options) {
 
+			// task-complete event
 			if (!options.silent) {
 				this.trigger('complete', taskname);
+				this.trigger('complete:' + taskname);
 			}
-			
 			this.done[ taskname ] = true;
 
+			// the sequence is incomplete
 			this.status = 'incomplete';
 
+			// sequence complete event
 			if ( taskname === _.last(this.taskorder) ) {
 				if (!options.silent) {
 					this.trigger('sequence-complete');

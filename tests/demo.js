@@ -2,17 +2,16 @@ define(['taskrunner'], function(TaskRunner) {
 	window.taskrunner = TaskRunner.build();
 
 	taskrunner.add('test-first', function(defer, common) {
-		console.log('first: ' + new Date().getTime() / 1000)
+		console.log('test-first')
 
 		// set a value on common
-		common.message = 'hahahahaha'
+		common.message = '"message set on the common object passed as second arg to all tasks"'
 
 		setTimeout(function() { defer.resolve('alsdjlaks'); }, 3000);
 	});
 
-	taskrunner.add('test-second', function(defer, common, message) {
+	taskrunner.add('test-second', function(defer, common) {
 		console.log('test-second, message on common: ' + common.message);
-		console.log('test-second' + ' ' + message);
 		setTimeout(function() { defer.resolve() }, 600);
 	});
 
@@ -28,16 +27,20 @@ define(['taskrunner'], function(TaskRunner) {
 	});
 
 
-	taskrunner.on('sequence-start', function(taskname) {
-		console.log('sequence started');
+	taskrunner.on('sequence-start', function() {
+		console.log('sequence started event at ' + new Date().getTime() / 1000);
 	});
 
 	taskrunner.on('complete', function(taskname) {
-		console.log('complete:' + taskname + ' ' + new Date().getTime() / 1000);
+		console.log('complete event:' + taskname + ' ' + new Date().getTime() / 1000);
 	});
 
-	taskrunner.on('sequence-complete', function(taskname) {
-		console.log('sequence finished');
+	taskrunner.on('complete:test-second', function() {
+		console.log('complete:test-second event')
+	});
+
+	taskrunner.on('sequence-complete', function() {
+		console.log('sequence finished event at ' + new Date().getTime() / 1000);
 	});
 
 	taskrunner.run();
