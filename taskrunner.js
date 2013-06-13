@@ -78,8 +78,8 @@ function(   $   , Buildable , Backbone , undef      , undef     ) {
 		},
 
 		// runs a sequence of tasks
-		run: function(parameters, options) {
-			// params: parameters to be passed to the task
+		run: function(args, options) {
+			// params: args to be passed to the task
 			// options: additional options
 			//			- silent: true if no events are requested
 			//			- ini
@@ -87,7 +87,7 @@ function(   $   , Buildable , Backbone , undef      , undef     ) {
 
 			if (this.isComplete()) { return true; }
 
-			var parameters = parameters || [],
+			var args = args || [],
 				options = options || {},
 				iniIndex = options.ini ?  _.indexOf(this.taskorder, ini_end[0]) : 0,
 				endIndex = options.end ? _.indexOf(this.taskorder, ini_end[1]) : this.taskorder.length -1;
@@ -95,6 +95,7 @@ function(   $   , Buildable , Backbone , undef      , undef     ) {
 			if (iniIndex !== -1 && endIndex !== -1) {
 
 				var _this = this,
+					common = {},		// a common object, passed as second argument to all tasks
 					tasksToRun = _.clone(this.taskorder).slice(iniIndex, endIndex + 1),
 					lastPromise = false;
 
@@ -116,17 +117,21 @@ function(   $   , Buildable , Backbone , undef      , undef     ) {
 								// pass the arguments to the next task
 								var args = _.args(arguments);
 
+								// add the common object to the arguments
+								args.unshift(common);
 								// add the promise to the arguments to be passed to the next task
 								args.unshift(currentPromise);
 
+								// effectively run the task
 								task.apply(null, args);
 							}
 						);
 					} else {
 						// else, if there are no deferrals on list,
 						// task the task immediately
-						parameters.unshift(currentPromise)
-						task.apply(null, parameters);
+						args.unshift(common)
+						args.unshift(currentPromise)
+						task.apply(null, args);
 					}
 
 					// set the lastPromise value as the current task defer
