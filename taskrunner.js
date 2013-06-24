@@ -96,33 +96,31 @@ function(   $   , Buildable , Backbone , undef      , undef     ) {
 			if (iniIndex !== -1 && endIndex !== -1) {
 
 				var _this = this,
-					tasksToRun = _.clone(this.taskorder).slice(iniIndex, endIndex + 1),
-					lastPromise = false;
+					toRun = _.clone(this.taskorder).slice(iniIndex, endIndex + 1),
+					lastDefer = false;
 
-				_.each(tasksToRun, function(taskname, index) {
+				// build up the promise chain
+				_.each(toRun, function(taskname, index) {
 
 					var task = _this.tasks[ taskname ],		// get the task
-						currentPromise = $.Deferred();		// create the defer object for the current task
-
-
+						currDefer = $.Deferred();		// create the defer object for the current task
 
 					// trigger events when this task is done
-					$.when(currentPromise).then(function() {
+					currDefer.then(function() {
 						_this._complete(taskname, options);
 					});
 
-					if (lastPromise) {
+					if (lastDefer) {
 						// if there are promises, wait until it is resolved to run
-						$.when(lastPromise)
-						.then(
+						lastDefer.then(
 							function() {
 								// trigger the events properly for the last task
-								_this._start(tasksToRun[ index + 1 ], options);
+								_this._start(toRun[ index + 1 ], options);
 
 								// effectively run the task.
 								// pass the promise to be solved by the task as first argument
 								// and the common obj as second argument
-								task(currentPromise, common);
+								task(currDefer, common);
 							}
 						);
 					} else {
@@ -133,16 +131,16 @@ function(   $   , Buildable , Backbone , undef      , undef     ) {
 						// task the task immediately
 						// pass the promise to be solved by the task as first argument
 						// and the common obj as second argument
-						task(currentPromise, common);
+						task(currDefer, common);
 					}
 
-					// set the lastPromise value to the current task promise
-					lastPromise = currentPromise;
+					// set the lastDefer value to the current task promise
+					lastDefer = currDefer;
 				});
 
 				// return the defer of the last task, so that
 				// this respects the promise spec
-				return lastPromise;
+				return lastDefer;
 			}
 		},
 
