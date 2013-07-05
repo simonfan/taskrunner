@@ -27,6 +27,21 @@ define(['taskrunner'], function(TaskRunner) {
 	});
 
 
+
+	// ANoNYMOUS TASK
+	taskrunner.add(function(promise, common) {
+
+		console.log('running annonymous task');
+
+		setTimeout(function() {
+			promise.resolve();
+
+			console.log('annonymous task finished');
+		}, 3000);
+	});
+
+
+
 	taskrunner.on('sequence-start', function() {
 		console.log('sequence started event at ' + new Date().getTime() / 1000);
 	});

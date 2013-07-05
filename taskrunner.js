@@ -38,7 +38,16 @@ function(   $   , Buildable , Backbone , undef      , undef     ) {
 				// merge the arrays
 				this.taskorder = this.taskorder.concat(name);
 
-			} else {
+			} else if (typeof name === 'function') {
+				// if the name is a function, assume it is an unnamed task,
+				// use taskorder.length (which is always the size of the taskorder lengh + 1) 
+				// as the task name
+				var task = name,
+					name = this.taskorder.length;
+
+				this.taskorder.push(name);
+
+			} else if (typeof name === 'string') {
 				this.taskorder.push(name);
 			}
 
@@ -73,9 +82,9 @@ function(   $   , Buildable , Backbone , undef      , undef     ) {
 			return this.tasks[ name ];
 		},
 
-		rerun: function(params, ini, end) {
+		rerun: function(common, options) {
 			this.reset();
-			this.run(params, ini, end);
+			this.run(common, options);
 		},
 
 		// runs a sequence of tasks
