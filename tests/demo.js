@@ -69,5 +69,5 @@ define(['taskrunner'], function(TaskRunner) {
 		console.log('sequence finished event at ' + new Date().getTime() / 1000);
 	});
 
-	taskrunner.run();
+	window.aaa = taskrunner.run();
 });

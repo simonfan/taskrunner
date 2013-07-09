@@ -8,7 +8,7 @@ function(   $   , Buildable , Backbone , undef      , undef     ) {
 			// and somewhere in time solves the promise, so that another task may be run.
 			// All solved parameters are passed on to the next function in the task list.
 
-			_.bindAll(this, '_start','_complete','rerun');
+			_.bindAll(this, '_start','_complete','rerun','run','add');
 
 			this.taskorder = taskorder || [];	// a list of tasks by name
 			this.tasks = tasks || {};			// a hash where reference to tasks is saved
@@ -35,8 +35,16 @@ function(   $   , Buildable , Backbone , undef      , undef     ) {
 
 			// first deal with the name
 			if ( _.isArray(name) ) {
-				// merge the arrays
-				this.taskorder = this.taskorder.concat(name);
+
+				if (!task) {
+					// if there is no task object,
+					// assume it is an array of anonymous tasks
+					_.each(name, this.add);
+				} else {
+					// assume 'name' is an array of task names
+					// merge the arrays
+					this.taskorder = this.taskorder.concat(name);
+				}
 
 			} else if (typeof name === 'function') {
 				// if the name is a function, assume it is an unnamed task,
