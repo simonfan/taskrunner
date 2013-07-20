@@ -1,18 +1,13 @@
 {
-	"name": "taskrunner",
-	"version": "0.0.1",
-	"dependencies": {
-		"jquery": "lastest",
-		"underscore": "latest",
-		"backbone": "latest",
-		"requirejs": "latest",
-
-
-		"buildable": "simonfan/buildable",
-		"_.mixins": "simonfan/_.mixins",
-
-	    "qunit": "latest"
-	},
-
-	"main": "component.js"
+  "name": "taskrunner",
+  "version": "0.0.1",
+  "dependencies": {
+    "underscore-amd": "~1.5.0",
+    "buildable": "simonfan/buildable",
+    "task": "simonfan/task",
+    "_.mixins": "simonfan/_.mixins",
+    "eventemitter2": "~0.4.11",
+    "fsm": "simonfan/fsm"
+  },
+  "main": "taskrunner.js"
 }

@@ -1,8 +1,12 @@
-define(['jquery','buildable','backbone','underscore', '_.mixins'],
-function(   $   , Buildable , Backbone , undef      , undef     ) {
+define(['jquery','buildable','eventemitter2','underscore', '_.mixins','fsm','task'],
+function(   $   , Buildable , Eventemitter2 , _          , undef     , FSM , Task ) {
 
-	var TaskRunner = Object.create(Buildable);
-	TaskRunner.extend(Backbone.Events, {
+	var taskrunner = {
+
+	};
+
+	var TaskRunner = Object.create(FSM);
+	TaskRunner.extend(Eventemitter2.prototype, {
 		init: function(taskorder, tasks) {
 			// tasks are functions that take a promise as their first parameter 
 			// and somewhere in time solves the promise, so that another task may be run.
