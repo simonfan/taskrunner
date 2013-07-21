@@ -3,11 +3,13 @@ require.config({
 	baseUrl: '',
 	paths: {
 		// basic libraries
-		'underscore': 'components/underscore-amd/underscore',
+		'jquery': 'components/jquery/jquery',
+		'underscore': 'components/underscore/underscore',
 		'eventemitter2': 'components/eventemitter2/lib/eventemitter2',
 
 		'buildable': 'components/buildable/buildable',
 		'_.mixins': 'components/_.mixins/_.mixins',
+		'json2': 'components/json2/json2',
 
 		'fsm': 'components/fsm/fsm',
 		'task': 'components/task/task',

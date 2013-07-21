@@ -1,40 +1,40 @@
 define(['taskrunner'], function(TaskRunner) {
 	window.taskrunner = TaskRunner.build();
 
-	taskrunner.add('test-first', function(defer, common) {
+	taskrunner.task('test-first', function(next, common) {
 		console.log('test-first')
 
 		// set a value on common
 		common.message = '"message set on the common object passed as second arg to all tasks"'
 
-		setTimeout(function() { defer.resolve('alsdjlaks'); }, 3000);
+		setTimeout(function() { next('alsdjlaks'); }, 3000);
 	});
 
-	taskrunner.add('test-second', function(defer, common) {
+	taskrunner.task('test-second', function(next, common) {
 		console.log('test-second, message on common: ' + common.message);
-		setTimeout(function() { defer.resolve() }, 600);
+		setTimeout(function() { next() }, 600);
 	});
 
-	taskrunner.add('test-third', function(defer, common) {
-		defer.resolve();
+	taskrunner.task('test-third', function(next, common) {
+		next();
 	});
 
-	taskrunner.add('test-fourth', function(defer, common) {
+	taskrunner.task('test-fourth', function(next, common) {
 
 		setTimeout(function() {
-			defer.resolve();
+			next();
 		}, 900);
 	});
 
 
 
 	// ANoNYMOUS TASK
-	taskrunner.add(function(promise, common) {
+	taskrunner.task(function(promise, common) {
 
 		console.log('running annonymous task');
 
 		setTimeout(function() {
-			promise.resolve();
+			promise();
 
 			console.log('annonymous task finished');
 		}, 3000);
@@ -50,12 +50,12 @@ define(['taskrunner'], function(TaskRunner) {
 		console.log('start event:' + taskname + ' ' + new Date().getTime() / 1000);
 	});
 
-	taskrunner.on('complete', function(taskname) {
-		console.log('complete event:' + taskname + ' ' + new Date().getTime() / 1000);
+	taskrunner.on('done', function(taskname) {
+		console.log('done event:' + taskname + ' ' + new Date().getTime() / 1000);
 	});
 
-	taskrunner.on('complete:test-second', function() {
-		console.log('complete:test-second event')
+	taskrunner.on('done:test-second', function() {
+		console.log('done:test-second event')
 	});
 
 
@@ -65,9 +65,9 @@ define(['taskrunner'], function(TaskRunner) {
 		console.log('start:test-third event');
 	})
 
-	taskrunner.on('sequence-complete', function() {
+	taskrunner.on('sequence-done', function() {
 		console.log('sequence finished event at ' + new Date().getTime() / 1000);
 	});
 
-	window.aaa = taskrunner.run();
+	window.aaa = taskrunner.run(['test-first','test-second','test-third']);
 });

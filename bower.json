@@ -2,12 +2,11 @@
   "name": "taskrunner",
   "version": "0.0.1",
   "dependencies": {
-    "underscore-amd": "~1.5.0",
     "buildable": "simonfan/buildable",
-    "task": "simonfan/task",
     "_.mixins": "simonfan/_.mixins",
     "eventemitter2": "~0.4.11",
-    "fsm": "simonfan/fsm"
+    "json2": "latest",
+    "underscore": "~1.5.1"
   },
   "main": "taskrunner.js"
 }
