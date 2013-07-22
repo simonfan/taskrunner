@@ -13,9 +13,7 @@ function(Buildable , undef      , EventEmitter2 , undef    , undef ) {
 
 		run: function(tasknames, common, insist) {
 
-			var args = _.args(arguments);
-
-			if (!this.condition.apply(this, args)) {
+			if (!insist && !this.condition(this.currentQueue, tasknames)) {
 				// if the conditional method returns false, 
 				// just return the deferred
 				return this.deferred;
@@ -90,8 +88,8 @@ function(Buildable , undef      , EventEmitter2 , undef    , undef ) {
 		// checks if the task should be run
 		// this method sould be overwritten
 		// by the objects that extend the taskrunner
-		// RECEIVES: queue, tasks, options
-		condition: function(queue, tasks, options) {
+		// RECEIVES: queue, tasks
+		condition: function(currentQueue, tasks) {
 			return JSON.stringify(tasks) !== JSON.stringify(queue);
 		},
 	})
