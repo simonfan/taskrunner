@@ -11,9 +11,9 @@ function(Buildable , undef      , EventEmitter2 , undef    , undef ) {
 			});
 		},
 
-		run: function(tasknames, asynchOptions) {
+		run: function(tasknames, asynchOptions, insist) {
 
-			if (!this.condition(this._tr_queue, tasknames, asynchOptions)) {
+			if (!this.condition(this._tr_queue, tasknames, asynchOptions) && !insist) {
 				// if the conditional method returns false, 
 				// just return the promise
 				return this._tr_promise;
