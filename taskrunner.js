@@ -13,6 +13,12 @@ function(Buildable , undef      , EventEmitter2 , undef    , undef ) {
 
 		run: function(tasknames, asynchOptions) {
 
+			if (!this.condition(this._tr_queue, tasknames, asynchOptions)) {
+				// if the conditional method returns false, 
+				// just return the promise
+				return this._tr_promise;
+			}
+
 			var _this = this,
 				asynchOptions = asynchOptions || {},
 				tasks = _.map(tasknames, function(taskname, order) {
@@ -20,7 +26,7 @@ function(Buildable , undef      , EventEmitter2 , undef    , undef ) {
 				});
 
 			// save the tasknames array as the queue to be executed
-			this.queue = tasknames;
+			this._tr_queue = tasknames;
 
 			// default options
 			_.defaults(asynchOptions, {
@@ -54,11 +60,15 @@ function(Buildable , undef      , EventEmitter2 , undef    , undef ) {
 				_this.emit('sequence-done', _this);
 
 				// reset queue
-				_this.queue = false;
-			})
+				_this._tr_queue = false;
+			});
+
+
+			// save the asynch promise
+			this._tr_promise = asynch;
 
 			// return the asynch promise
-			return asynch;
+			return this._tr_promise;
 		}
 	};
 
@@ -67,7 +77,8 @@ function(Buildable , undef      , EventEmitter2 , undef    , undef ) {
 		init: function(options) {
 			_.bindAll(this, 'taskrunner','task','run');
 
-			this.queue = false;
+			this._tr_promise = true;
+			this._tr_queue = false;
 		},
 
 		taskrunner: function(method) {
@@ -82,8 +93,9 @@ function(Buildable , undef      , EventEmitter2 , undef    , undef ) {
 		// checks if the task should be run
 		// this method sould be overwritten
 		// by the objects that extend the taskrunner
-		condition: function(tasks, options) {
-			return JSON.stringify(tasks) === JSON.stringify(this.queue);
+		// RECEIVES: queue, tasks, options
+		condition: function(queue, tasks, options) {
+			return JSON.stringify(tasks) !== JSON.stringify(queue);
 		},
 	})
 
