@@ -11,25 +11,30 @@ function(Buildable , undef      , EventEmitter2 , undef    , undef ) {
 			});
 		},
 
-		run: function(tasknames, asynchOptions, insist) {
+		run: function(tasknames, common, insist) {
 
-			if (!this.condition(this._tr_queue, tasknames, asynchOptions) && !insist) {
+			var args = _.args(arguments);
+
+			if (!this.condition.apply(this, args)) {
 				// if the conditional method returns false, 
-				// just return the promise
-				return this._tr_promise;
+				// just return the deferred
+				return this.deferred;
 			}
 
 			var _this = this,
-				asynchOptions = asynchOptions || {},
 				tasks = _.map(tasknames, function(taskname, order) {
 					return _this.taskrunner('task', taskname);
 				});
 
 			// save the tasknames array as the queue to be executed
-			this._tr_queue = tasknames;
+			this.currentQueue = tasknames;
 
-			// default options
-			_.defaults(asynchOptions, {
+
+			// emit sequence-start evnet
+			this.emit('sequence-start', this);
+
+			// run the tasks
+			var asynch = _.asynch({
 				context: _this,
 				before: function(taskname) {
 					// emit events
@@ -41,18 +46,10 @@ function(Buildable , undef      , EventEmitter2 , undef    , undef ) {
 					this.emit('done:'+taskname, this);
 					this.emit('done', taskname, this);
 				},
-				common: {},
+				common: common || {},
 				map: tasknames,
+				tasks: tasks
 			});
-
-			// set the tasks array
-			asynchOptions.tasks = tasks;
-
-			// emit sequence-start evnet
-			this.emit('sequence-start', this);
-
-			// run the tasks
-			var asynch = _.asynch(asynchOptions);
 
 			// when the sequence is finished, delete the tasks
 			asynch.then(function() {
@@ -60,15 +57,15 @@ function(Buildable , undef      , EventEmitter2 , undef    , undef ) {
 				_this.emit('sequence-done', _this);
 
 				// reset queue
-				_this._tr_queue = false;
+				_this.currentQueue = false;
 			});
 
 
-			// save the asynch promise
-			this._tr_promise = asynch;
+			// save the asynch deferred
+			this.deferred = asynch;
 
-			// return the asynch promise
-			return this._tr_promise;
+			// return the asynch deferred
+			return this.deferred;
 		}
 	};
 
@@ -77,8 +74,8 @@ function(Buildable , undef      , EventEmitter2 , undef    , undef ) {
 		init: function(options) {
 			_.bindAll(this, 'taskrunner','task','run');
 
-			this._tr_promise = true;
-			this._tr_queue = false;
+			this.deferred = true;
+			this.currentQueue = false;
 		},
 
 		taskrunner: function(method) {
