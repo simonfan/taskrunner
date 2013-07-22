@@ -11,7 +11,7 @@ function(Buildable , undef      , EventEmitter2 , undef    , undef ) {
 			});
 		},
 
-		run: function(tasknames, common, insist) {
+		run: function(tasknames, insist, common) {
 
 			if (!insist && !this.condition(this.currentQueue, tasknames)) {
 				// if the conditional method returns false, 
@@ -90,7 +90,7 @@ function(Buildable , undef      , EventEmitter2 , undef    , undef ) {
 		// by the objects that extend the taskrunner
 		// RECEIVES: queue, tasks
 		condition: function(currentQueue, tasks) {
-			return JSON.stringify(tasks) !== JSON.stringify(queue);
+			return JSON.stringify(tasks) !== JSON.stringify(currentQueue);
 		},
 	})
 

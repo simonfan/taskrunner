@@ -16,7 +16,7 @@ define(['taskrunner'], function(TaskRunner) {
 	});
 
 	taskrunner.task('test-third', function(next, common) {
-		next();
+		return true;
 	});
 
 	taskrunner.task('test-fourth', function(next, common) {
@@ -29,12 +29,12 @@ define(['taskrunner'], function(TaskRunner) {
 
 
 	// ANoNYMOUS TASK
-	taskrunner.task(function(promise, common) {
+	taskrunner.task(function(next, common) {
 
 		console.log('running annonymous task');
 
 		setTimeout(function() {
-			promise();
+			next();
 
 			console.log('annonymous task finished');
 		}, 3000);
